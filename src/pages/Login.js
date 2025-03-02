@@ -1,52 +1,38 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-// import '../styles/Login.css'; // Ensure this matches the correct file name
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 
-const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+function Login() {
+  const [user, setUser] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+  const handleChange = (e) => {
+    setUser({ ...user, [e.target.name]: e.target.value });
+  };
 
-      const data = await response.json();
-      if (response.ok) {
-        alert("Login successful");
-        // Redirect to dashboard after successful login
-        navigate('/dashboard');
-      } else {
-        alert(`Login failed: ${data.error || "Invalid credentials"}`);
-      }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:5020/api/auth/login", user);
+      localStorage.setItem("token", response.data.token);
+      alert("Login Successful!");
+      navigate("/dashboard");
     } catch (error) {
-      console.error("Error during login:", error);
-      alert("An error occurred. Please try again.");
+      alert(error.response?.data?.message || "Login Failed");
     }
   };
 
   return (
-    <div className="login">
-      <h1>Login</h1>
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={handleLogin} disabled={!username || !password}>Login</button>
+    <div>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
+        <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+        <button type="submit">Login</button>
+      </form>
+      <p>Don't have an account? <Link to="/register">Register</Link></p>
     </div>
   );
-};
+}
 
 export default Login;
